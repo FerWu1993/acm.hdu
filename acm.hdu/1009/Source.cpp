@@ -1,4 +1,6 @@
 #include <iostream>
+#include<algorithm>
+#include<iomanip>
 using namespace std;
 
 struct Room{
@@ -9,60 +11,58 @@ struct Room{
 
 class Sort{
 public:
-	Sort(int num) :m_iNum(num), m_curNum(0){}
-	int function(int len, Room* Array){
-		if (len == 1)
-			return 0;
-		int len1 = 0;
-		int _iCurNum=m_curNum;
-		Room value = Array[len - 1];
-		for (int index = 0; index < len-1; index++)
+	Sort(int num) :m_iNum(num), m_iCurNum(0){}
+	int function(int start,int end, Room* Array){
+		if (start >= end)
+			return start;
+		int Pos = start;
+		int _iCurNum = m_iCurNum;
+		Room value = Array[end];
+		for (int index = start; index < end; index++)
 		{
 			if (Array[index].Compare >= value.Compare ){
-				if (index != len1)
+				if (index != Pos)
 				{
 					Room iTempSwap = Array[index];
-					Array[index] = Array[len1];
-					Array[len1] = iTempSwap;
+					Array[index] = Array[Pos];
+					Array[Pos] = iTempSwap;
 				}
-				_iCurNum += Array[index].input;
+				_iCurNum += Array[Pos].input;
+				Pos++;
+			}
+		}
+		if (end != Pos)
+		{
+			Room iTempSwap = Array[end];
+			Array[end] = Array[Pos];
+			Array[Pos] = iTempSwap;
+		}
 
-				len1++;
-			}
-		}
-		Room iTempSwap = Array[len-1];
-		Array[len-1] = Array[len1];
-		Array[len1] = iTempSwap;
-		if (_iCurNum  > m_iNum)
+
+		if (_iCurNum > m_iNum)
 		{
-			if (len1 >= 1)
-			{
-				return function(len1, Array);
-			}
-			else
-				return len1;
+			return function(start, Pos-1, Array);
 		}
-		else if (_iCurNum + Array[len1].input < m_iNum)
+		else if (_iCurNum + Array[Pos].input < m_iNum)
 		{
-			m_curNum = _iCurNum + Array[len1].input;
-			if (len - len1-1 > 1)
-			{
-				return function(len - len1 - 1, Array + len1+1) + len1+1;
-			}
-			else
-				return len1+1;
+			m_iCurNum = _iCurNum + Array[Pos].input;
+			return function(Pos + 1, end, Array);
 		}
 		else
-		{
-			return len1;
-		}
+			return Pos;
+
+		return 0;
 	}
 private:
 	int m_iNum;
-	int m_curNum;
+	int m_iCurNum;
 };
 
-
+bool bigger(Room a, Room b)
+{
+	if (a.Compare == b.Compare)return a.Compare>b.Compare;
+	else return a.Compare>b.Compare;
+}
 int main(int argc, char argv[])
 {
 	int MyNum=0;
@@ -74,40 +74,40 @@ int main(int argc, char argv[])
 	{
 		int curin = 0;
 		int curOut = 0;
-		int allOut = 0;
+		double allOut = 0;
 		for (int index = 0; index < RoomNum; index++)
 		{
 			cin >> CurRoom[index].output;
 			cin >> CurRoom[index].input;
 			curin += CurRoom[index].input;
 			curOut += CurRoom[index].output;
-			if (CurRoom[index].input != 0)
 			{
 				CurRoom[index].Compare = ((double)CurRoom[index].output) / ((double)CurRoom[index].input);
 			}
-			else
-			{
-				allOut += CurRoom[index].output;
-				index--;
-				RoomNum--;
-				continue;
-			}
+
 		}
-		if (curin <= MyNum)
+ 
 		{
-			printf("%.3f\n", ((double)curOut));
-		}
-		else
-		{
+			//sort(CurRoom, CurRoom + RoomNum, bigger);
 			Sort st(MyNum);
-			int x = st.function(RoomNum, CurRoom);
+			int x = st.function(0,RoomNum-1, CurRoom);
 			curin = 0;
-			for (int index = 0; index < x; index++)
+			int index = 0;
+			
+			for (index = 0; index < RoomNum; index++)
 			{
-				allOut += CurRoom[index].output;
-				curin += CurRoom[index].input;
+				if (MyNum>CurRoom[index].input)
+				{
+					MyNum -= CurRoom[index].input;
+					allOut += CurRoom[index].output;
+				}
+				else{
+					allOut += (double)MyNum / CurRoom[index].input*CurRoom[index].output;
+					break;
+				}
 			}
-			printf("%.3f\n", ((double)allOut) + (MyNum - curin)*CurRoom[x].Compare);
+			cout.setf(ios::fixed);
+			cout << setprecision(3) << allOut << endl;
 		}
 		cin >> MyNum;
 		cin >> RoomNum;
